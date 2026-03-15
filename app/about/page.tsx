@@ -34,18 +34,24 @@ export default function Home() {
             try {
                 setLoading(true);
                 const response = await fetch("/api/contributors");
-                const data: Contributor[] = await response.json();
-                setContributors(data);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || "Failed to fetch contributors");
+                }
+
+                if (Array.isArray(data)) {
+                    setContributors(data);
+                } else {
+                    throw new Error("Invalid response format from API");
+                }
             } catch (err: unknown) {
                 if (err instanceof Error) {
                     console.error(err.message);
-                    setError(
-                        err.message ||
-                            "An error occurred while fetching contributors."
-                    );
-                } else if (typeof err === "string") {
-                    console.error(err);
-                    setError(err);
+                    setError(err.message);
+                } else {
+                    console.error("An unexpected error occurred", err);
+                    setError("An unexpected error occurred while fetching contributors.");
                 }
             } finally {
                 setLoading(false);

@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { Octokit } from "@octokit/rest";
 
-const octokit = new Octokit({ auth: process.env.GITHUB_API });
-
 type Contributor = {
   login?: string;
   id?: number;
@@ -27,12 +25,13 @@ type Contributor = {
 
 export async function GET() {
   try {
-    if (!process.env.GITHUB_API) {
-      throw new Error("GITHUB_TOKEN is not defined in the environment variables.");
-    }
-
     const owner = "Maxeuh";
     const repo = "Terraflow";
+
+    // Utilise GITHUB_API ou GITHUB_TOKEN si disponible, sinon mode anonyme
+    const octokit = new Octokit({ 
+      auth: process.env.GITHUB_API || process.env.GITHUB_TOKEN 
+    });
 
     const response = await octokit.rest.repos.listContributors({
       owner,

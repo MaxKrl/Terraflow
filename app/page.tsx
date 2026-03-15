@@ -16,11 +16,18 @@ import { FormField, TerraNode } from "@/util/types";
 import { VirtualMachine } from "@/util/virtual_machine";
 import { VirtualMachineTemplate } from "@/util/virtual_machine_template";
 import { VMService } from "@/util/virtual_machine_template_service";
-import { Button, Flex, Menu, useMantineTheme } from "@mantine/core";
+import {
+    Button,
+    Flex,
+    Menu,
+    useMantineColorScheme,
+    useMantineTheme,
+} from "@mantine/core";
 import {
     addEdge,
     Background,
     BackgroundVariant,
+    ColorMode,
     Connection,
     Controls,
     Edge,
@@ -55,10 +62,19 @@ export default function Home() {
     const [config, setConfig] = useState(new Configuration());
     const [importModalOpened, setImportModalOpened] = useState(false);
     const theme = useMantineTheme();
+    const { colorScheme } = useMantineColorScheme();
+    const [mounted, setMounted] = useState(false);
+
+    const actualColorMode =
+        colorScheme === "auto" ? "system" : (colorScheme as ColorMode);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const vmServiceRef = useRef(new VMService(config));
     const [vmTemplates, setVmTemplates] = useState<VirtualMachineTemplate[]>(
-        []
+        [],
     );
     const [currentTemplate, setCurrentTemplate] =
         useState<VirtualMachineTemplate | null>(null);
@@ -69,14 +85,14 @@ export default function Home() {
         setHeaderContent(
             <>
                 <Button onClick={() => config.generateTerraformFile()}>
-                    <FaFileExport style={{ marginRight: 8 }} /> Exporter
+                    <FaFileExport style={{ marginRight: 8 }} /> Export to
                     Terraform
                 </Button>
 
                 <Menu>
                     <Menu.Target>
                         <Button variant="outline">
-                            <FaSave style={{ marginRight: 8 }} /> Sauvegarde{" "}
+                            <FaSave style={{ marginRight: 8 }} /> Import/Export{" "}
                             <FaChevronDown style={{ marginLeft: 8 }} />
                         </Button>
                     </Menu.Target>
@@ -87,7 +103,7 @@ export default function Home() {
                             }
                             onClick={() => exportToFile(config)}
                         >
-                            Exporter
+                            Export to Terraflow
                         </Menu.Item>
                         <Menu.Item
                             leftSection={
@@ -95,11 +111,11 @@ export default function Home() {
                             }
                             onClick={() => setImportModalOpened(true)}
                         >
-                            Importer
+                            Import from Terraflow
                         </Menu.Item>
                     </Menu.Dropdown>
                 </Menu>
-            </>
+            </>,
         );
 
         return () => {
@@ -131,17 +147,17 @@ export default function Home() {
             // Ajouter la connexion à l'état des arêtes
             setEdges((eds) => addEdge(params, eds));
         },
-        [nodes, config]
+        [nodes, config],
     );
 
     const onDelete: OnDelete<Node, Edge> = useCallback(
         ({ nodes: nds, edges: edgs }: { nodes: Node[]; edges: Edge[] }) => {
             edgs.forEach((edge) => {
                 const sourceNode = nodes.find(
-                    (node) => node.id === edge.source
+                    (node) => node.id === edge.source,
                 );
                 const targetNode = nodes.find(
-                    (node) => node.id === edge.target
+                    (node) => node.id === edge.target,
                 );
 
                 if (sourceNode && targetNode) {
@@ -177,14 +193,14 @@ export default function Home() {
                 }
             });
         },
-        [nodes, config]
+        [nodes, config],
     );
 
     useEffect(() => {
         const vmService = vmServiceRef.current;
 
         const handleTemplatesUpdated = (
-            templates: VirtualMachineTemplate[]
+            templates: VirtualMachineTemplate[],
         ) => {
             setVmTemplates((prevTemplates) => {
                 if (prevTemplates === templates) {
@@ -201,7 +217,7 @@ export default function Home() {
         return () => {
             vmService.removeListener(
                 "templates-updated",
-                handleTemplatesUpdated
+                handleTemplatesUpdated,
             );
         };
     }, []);
@@ -223,7 +239,7 @@ export default function Home() {
             setCurrentTemplate(template);
             openDrawer("Edit VM Template", template.getFormFields());
         },
-        [openDrawer]
+        [openDrawer],
     );
 
     const closeDrawer = useCallback(() => {
@@ -237,19 +253,19 @@ export default function Home() {
                 if (drawerType === "Edit VM Template") {
                     vmServiceRef.current.updateVMTemplate(
                         currentTemplate,
-                        updatedFields
+                        updatedFields,
                     );
                 } else {
                     vmServiceRef.current.addVMTemplate(
                         currentTemplate,
-                        updatedFields
+                        updatedFields,
                     );
                 }
             }
             setDrawerOpened(false);
             setCurrentTemplate(null);
         },
-        [currentTemplate, drawerType]
+        [currentTemplate, drawerType],
     );
 
     const handleImport = useCallback((importedConfig: Configuration) => {
@@ -296,7 +312,7 @@ export default function Home() {
                         onEdgesChange={onEdgesChange}
                         onConnect={onConnect}
                         onDelete={onDelete}
-                        colorMode={"system"}
+                        colorMode={mounted ? actualColorMode : "light"}
                         proOptions={{ hideAttribution: true }}
                         snapGrid={[20, 20]}
                         snapToGrid={true}
@@ -309,7 +325,4 @@ export default function Home() {
             </Flex>
         </ReactFlowProvider>
     );
-}
-function setHeaderContent(arg0: JSX.Element) {
-    throw new Error("Function not implemented.");
 }
