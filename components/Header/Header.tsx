@@ -82,7 +82,7 @@ export function Header({ children }: HeaderProps) {
                     <Image
                         width={28}
                         height={28}
-                        src="/logo.png"
+                        src="/logo.svg"
                         alt="Terraflow Logo"
                     />
                     <Text size="xl" fw={700}>
